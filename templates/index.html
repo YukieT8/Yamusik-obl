@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yandex Music Cover Downloader</title>
+    <style>
+        :root { --primary: #ffcc00; --bg: #121212; --card: #1e1e1e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 15px 0; background: #2a2a2a; border: 1px solid #333; border-radius: 10px; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #result { margin-top: 20px; display: none; }
+        .cover { width: 100%; border-radius: 10px; transition: 0.3s; }
+        .info { margin: 10px 0; font-size: 0.9rem; color: #bbb; }
+        .error { color: #ff4d4d; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Yandex<span>Cover</span></h1>
+    <input type="text" id="trackUrl" placeholder="Вставьте ссылку на трек...">
+    <button onclick="getCover()" id="btn">Получить обложку</button>
+    <div id="error" class="error"></div>
+
+    <div id="result">
+        <div class="info" id="trackInfo"></div>
+        <img id="coverImg" class="cover" src="" alt="Cover">
+        <br><br>
+        <a id="downloadBtn" style="color: var(--primary); text-decoration: none; font-weight: bold;" href="#" target="_blank">Открыть в полном размере</a>
+    </div>
+</div>
+
+<script>
+    async function getCover() {
+        const url = document.getElementById('trackUrl').value;
+        const btn = document.getElementById('btn');
+        const resDiv = document.getElementById('result');
+        const errDiv = document.getElementById('error');
+
+        btn.disabled = true;
+        btn.innerText = 'Загрузка...';
+        errDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/get_cover', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url: url })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('coverImg').src = data.url;
+                document.getElementById('downloadBtn').href = data.url;
+                document.getElementById('trackInfo').innerText = `${data.artist} — ${data.title}`;
+                resDiv.style.display = 'block';
+            } else {
+                errDiv.innerText = data.error;
+                errDiv.style.display = 'block';
+            }
+        } catch (e) {
+            errDiv.innerText = 'Ошибка соединения с сервером';
+            errDiv.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Получить обложку';
+        }
+    }
+</script>
+</body>
+</html>
